@@ -125,8 +125,8 @@ namespace Dns_Spoof
         public static void SendDNSReplayRequest(string spoofDomain, byte[] spoofIP, byte[] recvIP)
         {
             using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            var packet = PrepareDNSPacket(spoofDomain, recvIP);
-            int amountSent = socket.SendTo(packet, new IPEndPoint(new IPAddress(spoofIP), 53652));
+            var packet = PrepareDNSPacket(spoofDomain, spoofIP);
+            int amountSent = socket.SendTo(packet, new IPEndPoint(new IPAddress(recvIP), 53));
         }
     }
 }
