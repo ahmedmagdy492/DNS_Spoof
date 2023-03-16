@@ -1,0 +1,15 @@
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\obj\Debug\net6.0\Dns_Spoof.csproj.AssemblyReference.cache
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\obj\Debug\net6.0\Dns_Spoof.GeneratedMSBuildEditorConfig.editorconfig
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\obj\Debug\net6.0\Dns_Spoof.AssemblyInfoInputs.cache
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\obj\Debug\net6.0\Dns_Spoof.AssemblyInfo.cs
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\obj\Debug\net6.0\Dns_Spoof.csproj.CoreCompileInputs.cache
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\bin\Debug\net6.0\Dns_Spoof.exe
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\bin\Debug\net6.0\Dns_Spoof.deps.json
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\bin\Debug\net6.0\Dns_Spoof.runtimeconfig.json
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\bin\Debug\net6.0\Dns_Spoof.dll
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\bin\Debug\net6.0\Dns_Spoof.pdb
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\obj\Debug\net6.0\Dns_Spoof.dll
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\obj\Debug\net6.0\refint\Dns_Spoof.dll
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\obj\Debug\net6.0\Dns_Spoof.pdb
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\obj\Debug\net6.0\Dns_Spoof.genruntimeconfig.cache
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Dns_Spoof\obj\Debug\net6.0\ref\Dns_Spoof.dll
