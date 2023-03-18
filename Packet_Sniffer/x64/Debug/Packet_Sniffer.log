@@ -1,2 +1,4 @@
 ﻿  Main.cpp
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Packet_Sniffer\Main.cpp(200,10): warning C4309: '=': truncation of constant value
+D:\Hacking Tools\Hacking Programs\Dns_Spoof\Packet_Sniffer\Main.cpp(201,10): warning C4309: '=': truncation of constant value
   Packet_Sniffer.vcxproj -> D:\Hacking Tools\Hacking Programs\Dns_Spoof\x64\Debug\Packet_Sniffer.exe
