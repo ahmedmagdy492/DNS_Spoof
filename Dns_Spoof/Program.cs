@@ -25,7 +25,7 @@
                 var recvIP = ConvertStrIPToBytes(args[1]);
                 int noOfPacketsToSend = Convert.ToInt32(args[3]);
                 
-                for(int i  =0;i < noOfPacketsToSend; i++)
+                for(int i = 0;i < noOfPacketsToSend; i++)
                 {
                     DNSSpoofer.SendDNSReplayRequest(args[2], spoofIP, recvIP);
                     Console.WriteLine("Sent DNS Replay to {1} as {0}", args[0], args[1]);
