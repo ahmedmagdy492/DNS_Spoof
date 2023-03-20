@@ -130,6 +130,7 @@ int send_dns_packet(char* packet, int len, int port, char ip[4]) {
 	addr.sin_addr.S_un.S_un_b.s_b3 = ip[2];
 	addr.sin_addr.S_un.S_un_b.s_b4 = ip[3];
 
+	// ISSUE: OS will pick up random port to send the data from
 	result = sendto(sock, packet, len, 0, (struct sockaddr*)&addr, sizeof(addr));
 
 	closesocket(sock);
